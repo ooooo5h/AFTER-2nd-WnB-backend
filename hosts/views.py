@@ -1,3 +1,4 @@
+import json
 import boto3
 import uuid
 
@@ -5,7 +6,7 @@ from django.views       import View
 from django.http        import JsonResponse
 from django.db          import transaction
 from django.db          import IntegrityError
-from django.db.models import Count
+from django.db.models   import Count
 
 from core.utils         import signin_decorator  
 from hosts.models       import Host
@@ -14,10 +15,8 @@ from rooms.models       import Category, Room, Facility, RoomFacility, RoomType,
 from my_settings        import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, IMAGE_URL, AWS_BUCKET_NAME
 
 class HostingRoomView(View):
-    
     @signin_decorator
     def post(self, request):
-          
         data = request.POST 
 
         try:
@@ -114,3 +113,20 @@ class HostingRoomView(View):
         
         except IntegrityError:
             return JsonResponse({'message':'UNKNOWN_DATA'}, status=400)
+        
+class RegisterHostView(View):
+    @signin_decorator
+    def post(self, request):
+        
+        user = request.user
+
+        host_already_exist, is_created = Host.objects.get_or_create(
+            user_id = user.id
+        )        
+        
+        host_name = host_already_exist.user.last_name + host_already_exist.user.first_name
+        
+        if is_created:
+            return JsonResponse({'message':'SUCCESS', 'data':{'HOST_NAME':f'{host_name}'}}, status=201)
+
+        return JsonResponse({'message':'ALREADY_REGISTERED', 'data':{'HOST_NAME':f'{host_name}'}}, status=409)

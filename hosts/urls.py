@@ -1,7 +1,7 @@
 from django.urls import path
 
-from hosts.views import HostingRoomView
+from hosts.views import RegisterHostView
 
 urlpatterns = [
-    path('', HostingRoomView.as_view())
+    path('', RegisterHostView.as_view())
 ]

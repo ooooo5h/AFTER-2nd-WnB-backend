@@ -8,7 +8,7 @@ class User(TimeStampModel):
     last_name         = models.CharField(max_length = 50, null=True)
     email             = models.CharField(max_length = 50, unique=True)
     password          = models.CharField(max_length = 500, null=True)
-    kakao_id          = models.BigIntegerField(unique=True)
+    kakao_id          = models.BigIntegerField(unique=True, null=True)
     kakao_profile_img = models.CharField(max_length = 500, null=True)
     phone_number      = models.CharField(max_length = 50, null=True)
     birth_day         = models.CharField(max_length = 50, null=True)
