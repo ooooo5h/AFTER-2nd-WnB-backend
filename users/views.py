@@ -1,12 +1,13 @@
 import json
 import requests
 import jwt
+import bcrypt
 
 from django.conf        import settings
 from django.forms       import ValidationError
 from django.http        import JsonResponse
 from django.views       import View
-from core.utils         import check_first_name, check_last_name, check_phone_number, signin_decorator
+from core.utils         import check_email, check_first_name, check_last_name, check_password, check_phone_number, signin_decorator
 
 from users.models       import User
 
@@ -71,3 +72,48 @@ class UserAdditionalInfoView(View):
         
         except ValidationError as e:
             return JsonResponse({'message':f'{e}'}, status=400)
+        
+class SignUpView(View):
+    def post(self, request):        
+        try :
+            data         = json.loads(request.body)
+
+            first_name   = data['first_name']
+            last_name    = data['last_name']
+            email        = data['email']
+            password     = data['password']
+            phone_number = data['phone_number']
+
+            check_first_name(first_name)
+            check_last_name(last_name)
+            check_email(email)
+            check_password(password)
+            check_phone_number(phone_number)
+        
+            email_exist_user = User.objects.filter(email=email)
+            
+            if email_exist_user:
+                return JsonResponse({'message':'EMAIL_ALREADY_EXIST'}, status=409)
+            
+            phone_exist_user = User.objects.filter(phone_number=phone_number) 
+
+            if phone_exist_user:
+                return JsonResponse({'message':'PHONE_ALREADY_EXIST'}, status=409)
+            
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
+            User.objects.create(
+                first_name   = first_name,
+                last_name    = last_name,
+                email        = email,
+                phone_number = phone_number,
+                password     = hashed_password
+            )
+            
+            return JsonResponse({'message':'USER_CREATED'}, status=201)
+        
+        except KeyError:
+            return JsonResponse({'message':'KEY_ERROR'}, status=400)
+        except ValidationError as e:
+            return JsonResponse({'message': f'{e}'}, status=400)
+        
