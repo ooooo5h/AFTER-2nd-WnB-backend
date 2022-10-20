@@ -115,5 +115,29 @@ class SignUpView(View):
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=400)
         except ValidationError as e:
-            return JsonResponse({'message': f'{e}'}, status=400)
+            return JsonResponse({'message':f'{e}'}, status=400)
         
+class SignInView(View):
+    def post(self, request):
+        try:
+            data     = json.loads(request.body)
+            
+            # 이메일과 비밀번호로 로그인하기
+            email    = data['email']
+            password = data['password']
+            
+            # 이메일 불일치 : DoesNotExist 에러 반환
+            email_exist_user = User.objects.get(email=email)
+            
+            # 비밀번호 불일치 : 401 Unauthorized
+            if not bcrypt.checkpw(password.encode('utf-8'), email_exist_user.password.encode('utf-8')):
+                return JsonResponse({'message':'INVALID_USER'}, status=401)
+
+            # 로그인 성공 => 토큰 발급.
+            token = jwt.encode({'id':email_exist_user.id}, settings.SECRET_KEY, settings.ALGORITHM)
+            return JsonResponse({'message':'LOGIN_SUCCESS', 'data':{'USER_NAME':f'{email_exist_user.last_name}{email_exist_user.first_name}', 'TOKEN':token}}, status=200)                     
+
+        except KeyError:
+            return JsonResponse({'message':'KEY_ERROR'}, status=400)
+        except User.DoesNotExist:
+            return JsonResponse({'message':'USER_DOES_NOT_EXIST'}, status=404)
