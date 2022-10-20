@@ -135,7 +135,7 @@ class SignInView(View):
 
             # 로그인 성공 => 토큰 발급.
             token = jwt.encode({'id':email_exist_user.id}, settings.SECRET_KEY, settings.ALGORITHM)
-            return JsonResponse({'message':'LOGIN_SUCCESS', 'data':{'USER_NAME':f'{email_exist_user.last_name}{email_exist_user.first_name}', 'TOKEN':token}}, status=200)                     
+            return JsonResponse({'message':'LOGIN_SUCCESS', 'data':{'user_name':f'{email_exist_user.last_name}{email_exist_user.first_name}', 'token':token}}, status=200)                     
 
         except KeyError:
             return JsonResponse({'message':'KEY_ERROR'}, status=400)
